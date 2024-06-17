@@ -2,6 +2,7 @@
 
 
 ## FUNCTIONS
+**Generate UUID**
 ```SQL
 uuid_generate_v4()
 ```
