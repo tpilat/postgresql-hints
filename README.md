@@ -128,3 +128,23 @@ FROM schema."Table" t1
 JOIN schema."Table2" t2
 WHERE ...
 ```
+
+
+## USERS, PERMISSIONS
+**CREATE USER ... GRANT SELECT**
+```SQL
+DROP USER IF EXISTS myuser;
+CREATE USER myuser WITH PASSWORD 'myPassword' NoCreateDB; 
+
+GRANT USAGE ON SCHEMA doc TO myuser;
+GRANT SELECT ON ALL TABLES IN SCHEMA doc TO myuser;
+
+...
+
+GRANT USAGE ON SCHEMA des To myuser;
+GRANT select, insert, update, delete On All Tables In Schema des To myuser;
+GRANT usage On All Sequences In Schema des To myuser;
+```
+
+
+
