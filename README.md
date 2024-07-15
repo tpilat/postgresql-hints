@@ -148,4 +148,30 @@ GRANT usage On All Sequences In Schema des To myuser;
 ```
 
 
+## QUERY PARAMETERS
+**WITH, TABLE**
+```SQL
+WITH
+    constant_1_str AS (VALUES ('Hello World')),
+    constant_2_int AS (VALUES (100))
+SELECT *
+FROM some_table
+WHERE column8 = (table constant_1_str)
+LIMIT (table constant_2_int)
+```
 
+**ONE ROW WITH**
+```SQL
+WITH DATUMY AS (
+SELECT
+    '2023-01-01 00:00:00'::timestamp AS "DATUM_OD",
+    '2023-12-31 23:59:59'::timestamp AS "DATUM_DO"
+)
+SELECT s."BusinessName" AS "SPV", s."BusinessIdentificationNumber" AS "ICO", COUNT(id."IdIncomingDocument") AS "PocetDorucenychZasielok"
+FROM sub."Subject" s
+LEFT JOIN reg."IncomingDocument" id ON s."IdSubject" = id."IdOwnerLegalSubject", DATUMY
+WHERE s."IdTenant" IS NOT NULL AND s."IdParent" IS NOT NULL
+	AND (id."AuditCreatedUtc" IS NULL
+		OR DATUMY."DATUM_OD" <= (id."AuditCreatedUtc" at time zone 'utc' at time zone 'Europe/Bratislava') AND (id."AuditCreatedUtc" at time zone 'utc' at time zone 'Europe/Bratislava') <= DATUMY."DATUM_DO")
+GROUP BY s."BusinessName", s."BusinessIdentificationNumber";
+```
