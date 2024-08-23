@@ -185,3 +185,20 @@ WHERE s."IdTenant" IS NOT NULL AND s."IdParent" IS NOT NULL
 		OR DATUMY."DATUM_OD" <= (id."AuditCreatedUtc" at time zone 'utc' at time zone 'Europe/Bratislava') AND (id."AuditCreatedUtc" at time zone 'utc' at time zone 'Europe/Bratislava') <= DATUMY."DATUM_DO")
 GROUP BY s."BusinessName", s."BusinessIdentificationNumber";
 ```
+
+
+## REPEAT
+**FOR i**
+```SQL
+do
+$$
+declare 
+  i record;
+begin
+  for i in 1..3 loop
+    Insert into employee values(1,'Mike');
+  end loop;
+end;
+$$
+;
+```
