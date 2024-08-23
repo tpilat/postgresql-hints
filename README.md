@@ -88,6 +88,16 @@ CREATE Schema schemaname;
 ```
 
 
+## CREATE
+**CREATE TABLE AS SELECT FROM**
+```SQL
+CREATE TABLE schema."NewTableName" AS
+SELECT "ColumnName1", "ColumnName2", "ColumnName3"
+FROM schema2."Table"
+WHERE ...
+```
+
+
 ## INSERT
 **INSERT INTO ... SELECT FROM**
 ```SQL
