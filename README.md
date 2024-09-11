@@ -157,6 +157,14 @@ GRANT select, insert, update, delete On All Tables In Schema des To myuser;
 GRANT usage On All Sequences In Schema des To myuser;
 ```
 
+**GET ALL GRANTED PERMISSIONS**
+```SQL
+SELECT 
+	*
+FROM 
+    information_schema.role_table_grants;
+```
+
 
 ## QUERY PARAMETERS
 **WITH, TABLE**
