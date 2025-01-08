@@ -210,3 +210,25 @@ end;
 $$
 ;
 ```
+
+
+## PostgreSQL CONNECTIONS
+**SELECT ALL CONNECTIONS**
+```
+SELECT 
+    pid, 
+    usename AS username, 
+    datname AS database_name, 
+    client_addr AS client_address, 
+    client_port, 
+    application_name, 
+    state, 
+    backend_start AS connection_start_time, 
+    query AS current_query,
+    backend_type,
+    wait_event
+FROM 
+    pg_stat_activity
+ORDER BY 
+    backend_start;
+```
