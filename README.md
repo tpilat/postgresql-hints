@@ -80,6 +80,44 @@ CREATE INDEX "IX_TABLE_COLUMN" ON schema."Table" using gin ("ColumnName" gin_trg
 ```
 
 
+**READ ALL INDEXES WITH COLUMN TYPES**
+```SQL
+SELECT
+				U.usename AS user_name,
+				tnsp.nspname AS table_schema,
+				trel.relname AS table_name,
+				irel.relname AS index_name,
+				a.attname AS column_name,
+				col.DATA_TYPE,
+				i.indisunique AS is_unique,
+				i.indisprimary AS is_primary,  
+				(i.indexprs IS NOT NULL) OR(i.indkey::int[] @> array[0]) AS is_functional,
+				i.indpred IS NOT NULL AS is_partial				
+FROM pg_index AS i
+				JOIN pg_class AS trel ON trel.oid = i.indrelid
+				JOIN pg_namespace AS tnsp ON trel.relnamespace = tnsp.oid
+				JOIN pg_class AS irel ON irel.oid = i.indexrelid
+				CROSS JOIN LATERAL unnest(i.indkey) WITH ORDINALITY AS c(colnum, ordinality)
+				LEFT JOIN LATERAL unnest(i.indoption) WITH ORDINALITY AS o(option, ordinality) ON c.ordinality = o.ordinality
+				JOIN pg_attribute AS a ON trel.oid = a.attrelid AND a.attnum = c.colnum
+				JOIN pg_user AS U ON trel.relowner = U.usesysid
+				LEFT JOIN information_schema."columns" col ON col.table_schema = tnsp.nspname AND col.table_name = trel.relname AND col.column_name = a.attname
+WHERE --i.indisunique <> TRUE AND i.indisprimary <> TRUE AND
+				NOT nspname LIKE 'pg%' --Excluding system tables
+				AND col.DATA_TYPE <> 'uuid'
+				AND col.DATA_TYPE <> 'timestamp without time zone'
+				AND col.DATA_TYPE <> 'integer'
+				AND col.DATA_TYPE <> 'bigint'
+ORDER BY U.usename,
+				tnsp.nspname,
+				trel.relname,
+				irel.relname,
+				a.attname
+
+```
+
+
+
 ## SCHEMAS
 **DROP AND CREATE SCHEMA**
 ```SQL
