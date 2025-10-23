@@ -270,3 +270,73 @@ FROM
 ORDER BY 
     backend_start;
 ```
+
+
+## PostgreSQL Database SIZEs
+**SELECT ALL DATABASE SIZEs**
+```
+SELECT
+    d.datname                                  AS database,
+    pg_catalog.pg_get_userbyid(d.datdba)       AS owner,
+    t.spcname                                  AS tablespace,
+    pg_database_size(d.datname)                AS size_bytes,
+    pg_size_pretty(pg_database_size(d.datname)) AS size_pretty
+FROM pg_database d
+LEFT JOIN pg_tablespace t ON t.oid = d.dattablespace
+ORDER BY pg_database_size(d.datname) DESC;
+```
+
+
+**SELECT ALL TABLE SIZEs**
+```
+SELECT
+    n.nspname                                AS schema,
+    c.relname                                AS table_name,
+    pg_size_pretty(pg_total_relation_size(c.oid)
+        - pg_relation_size(c.oid)
+        - pg_indexes_size(c.oid))            AS toast_other_pretty,
+    pg_size_pretty(pg_total_relation_size(c.oid)) AS total_pretty,
+    pg_size_pretty(pg_relation_size(c.oid))  AS heap_pretty,
+    pg_size_pretty(pg_indexes_size(c.oid))   AS indexes_pretty,
+    c.reltuples::bigint                      AS approx_rows,                -- približný počet riadkov (po ANALYZE)
+    pg_relation_size(c.oid)                  AS heap_bytes,                 -- samotná tabuľka (bez indexov)
+    pg_indexes_size(c.oid)                   AS indexes_bytes,              -- všetky indexy tabuľky
+    (pg_total_relation_size(c.oid)
+        - pg_relation_size(c.oid)
+        - pg_indexes_size(c.oid))            AS toast_other_bytes,          -- TOAST + VM/FSM
+    pg_total_relation_size(c.oid)            AS total_bytes                -- spolu
+FROM pg_class c
+JOIN pg_namespace n ON n.oid = c.relnamespace
+WHERE
+    c.relkind = 'r'                                  -- bežné (fyzické) tabuľky; zahŕňa aj partície
+    AND n.nspname NOT IN ('pg_catalog', 'information_schema')
+    AND n.nspname NOT LIKE 'pg_toast%'
+    AND n.nspname NOT LIKE 'pg_temp_%'
+ORDER BY pg_total_relation_size(c.oid) DESC;
+```
+
+
+
+**SELECT ALL INDEX SIZEs**
+```
+SELECT
+  n.nspname                                AS schema,
+  t.relname                                AS table_name,
+  i.relname                                AS index_name,
+  pg_am.amname                             AS index_type,        -- btree, gin, gist, ...
+  pg_relation_size(i.oid)                  AS size_bytes,
+  pg_size_pretty(pg_relation_size(i.oid))  AS size_pretty,
+  s.idx_scan                               AS scans,             -- koľko-krát sa index použil (od posledného resetu štatistík)
+  s.idx_tup_read, s.idx_tup_fetch
+FROM pg_class       AS i                   -- index
+JOIN pg_namespace   AS n ON n.oid = i.relnamespace
+JOIN pg_index       AS x ON x.indexrelid = i.oid
+JOIN pg_class       AS t ON t.oid = x.indrelid
+LEFT JOIN pg_stat_all_indexes AS s ON s.indexrelid = i.oid
+LEFT JOIN pg_am ON pg_am.oid = i.relam
+WHERE i.relkind IN ('i','I')               -- 'i' = bežný index, 'I' = parent partic. index (zvyčajne 0B)
+	AND n.nspname NOT IN ('pg_catalog', 'information_schema')
+    AND n.nspname NOT LIKE 'pg_toast%'
+    AND n.nspname NOT LIKE 'pg_temp_%'
+ORDER BY pg_relation_size(i.oid) DESC;
+```
